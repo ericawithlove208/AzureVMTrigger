@@ -1,0 +1,54 @@
+#This Azure Function is used to start VMs within a resource group
+# It was originally created for eplansTest virtual machines, as a self-service endeavor.
+# Calling the Function manually:
+<#
+    $Body = @"
+    {
+        "resourcegroup": "source-rg",
+        "action": "start",
+        "subscriptionid": "<subID>",
+        "tenantid": "<azure AD tenant ID"
+    }
+    "@
+    $URI = "https://hostname.azurewebsites.net/api/startVMs?code=FUNCTIONKEY"
+    Invoke-RestMethod -Uri $URI -Method Post -body $body
+#>
+
+using namespace System.Net
+
+# Input bindings are passed in via param block.
+param($Request, $TriggerMetadata)
+
+# Write to the Azure Functions log stream.
+#Write-Host "PowerShell HTTP trigger function processed a request."
+
+# Interact with query parameters or the body of the request.
+$bodyobject = ConvertFrom-Json –InputObject $Request.Body
+
+$rgname = $bodyobject.resourcegroup
+$action = $bodyobject.action
+$subscriptionid = $bodyobject.subscriptionid
+$tenantid = $bodyobject.tenantid
+
+#Proceed if all request body parameters are found
+if ($rgname -and $action -and $subscriptionid -and $tenantid) {
+    $status = [HttpStatusCode]::OK
+    Select-AzSubscription -SubscriptionID $subid -TenantID $tenantid
+    if ($action -ceq "get") {
+        $body = Get-AzVM -ResourceGroupName $rgname -status | select-object Name, PowerState
+    }
+    if ($action -ceq "start") {
+        $body = $action
+        $body = Get-AzVM -ResourceGroupName $rgname -Name "KinoTek-Dev-2" | Start-AzVM -AsJob
+    }
+}
+else {
+    $status = [HttpStatusCode]::BadRequest
+    $body = "Got rgname $rgname action $action subscriptionid $subscriptionid tenantid $tenantid" 
+}
+
+# Associate values to output bindings by calling 'Push-OutputBinding'.
+Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
+        StatusCode = $status
+        Body       = $body
+    })

@@ -1,0 +1,12 @@
+$Body = @"
+{
+    "resourcegroup": "KinoTek-Dev",
+    "action": "start",
+    "subscriptionid": "fdad6769-5811-4d64-9e32-07a3f0d362ab",
+    "tenantid": "6fd4d8ec-d193-4130-8afa-bd7f0244798a"
+}
+"@
+
+$URI = "https://kinotek-dev-function-vm.azurewebsites.net/api/StartVM?code=8fqfBMOWm2cE/R1dRxaNkd7vc9qhUKR/iOrBhPtdK/X20LPXOlS/eQ=="
+
+Invoke-RestMethod -Uri $URI -Method Post -body $body
